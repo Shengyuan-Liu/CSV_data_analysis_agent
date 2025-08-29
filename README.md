@@ -18,8 +18,9 @@
 
 1) 安装conda环境
 ```shell
-conda env create -f environment.yaml
+conda create -n csv_agent python=3.10
 conda activate csv_agent
+pip install -r requirements.txt
 ```
 
 2) 配置环境变量（.env）  
