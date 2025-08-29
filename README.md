@@ -16,24 +16,23 @@
 
 ## 环境准备
 
-1) Python 版本
-- 建议 Python 3.10+
-
-2) 安装依赖
-```bash
-pip install -r requirements.txt
+1) 安装conda环境
+```shell
+conda env create -f environment.yaml
+conda activate csv_agent
 ```
 
-3) 配置环境变量（.env）
+2) 配置环境变量（.env）  
 在项目根目录创建 `.env`，示例：
 ```
-OPENAI_API_KEY=你的APIKey
-BASE_URL=https://api.zhizengzeng.com/v1
-OPENAI_MODEL=gpt-4o
+OPENAI_API_KEY=<你的APIKey>
+
+# BASE_URL可以改成接受OpenAI风格的base_url, 我这里用的是deepseek
+BASE_URL=https://api.deepseek.com
 ```
 
-4) 目录说明
-- `data/titanic_cleaned.csv`：固定读取的数据集
+3) 目录说明
+- `data/`：储存读取的数据集
 - `output/`：图像与模型输出目录（程序会自动创建）
 
 ## 运行
@@ -42,7 +41,12 @@ OPENAI_MODEL=gpt-4o
 python agent.py
 ```
 
-启动后会进入一个简单的 CLI 对话界面。请按“每次对话一个功能”的要求，依次输入以下 4 条指令（示例）：
+启动后会进入一个简单的 CLI 对话界面。你需要先输入要处理的数据路径，然后可以依次输入以下 4 条指令（示例）:
+
+0) 输入数据
+```
+请输入csv数据路径: data\titanic_cleaned.csv
+```
 
 1) 数据 summary
 ```
@@ -54,7 +58,7 @@ python agent.py
 请对数值列的缺失值用均值填充，并将结果保存到 data/titanic_cleaned_filled.csv，同时打印填充前后缺失计数
 ```
 
-3) 绘制 Survived 分布
+3) 绘制 xxx列 分布
 ```
 请绘制 Survived 列的分布图，保存到 output/survived_distribution.png
 ```
@@ -66,16 +70,6 @@ python agent.py
 
 执行过程中，Agent 会：
 - 自动通过 Python REPL 运行大模型生成的代码
-- 读取固定数据路径：`data/titanic_cleaned.csv`
-- 将图表保存到 `output/`，新 CSV 保存到 `data/`，模型保存到 `output/`
+- 读取输入数据路径  
+- 将图表保存到 `output/`，新 csv 保存到 `data/`，模型保存到 `output/`
 - 在控制台打印关键结果与保存文件的路径
-
-## 生成物位置（预期）
-- 缺失值填充后的 CSV：`data/titanic_cleaned_filled.csv`
-- 分布图：`output/survived_distribution.png`
-- 训练好模型：`output/model.joblib`
-
-## 常见说明与提示
-- 如果数据中不存在 `Survived` 列，Agent 会打印可选列名，并提示你选择替代表达的目标列或绘图列。
-- 若遇到依赖缺失，请确认已执行 `pip install -r requirements.txt`。
-- 想更换数据文件时，可修改 `agent.py` 中的 `DATA_PATH` 常量，或将目标 CSV 放置为 `data/titanic_cleaned.csv`。

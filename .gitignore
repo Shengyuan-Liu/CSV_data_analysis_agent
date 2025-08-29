@@ -208,4 +208,4 @@ __marimo__/
 
 
 # data
-data/titanic_cleaned.csv
+output/

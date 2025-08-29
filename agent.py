@@ -11,20 +11,17 @@ from langchain.schema import AIMessage, HumanMessage
 # Load environment variables
 load_dotenv()
 
-# Configure LLM (OpenAI-compatible, e.g., DeepSeek via BASEURL)
+# Configure LLM
 llm = ChatOpenAI(
-    model=os.getenv("OPENAI_MODEL", "deepseek-chat"),
+    model="deepseek-chat",
     api_key=os.getenv("OPENAI_API_KEY"),
-    base_url=os.getenv("BASEURL"),
-    temperature=0.2,
+    base_url=os.getenv("BASE_URL"),
+    temperature=0.0,
 )
 
 # Single tool: Python REPL for executing LLM-generated Python code
 python_tool = PythonREPLTool()
 tools = [python_tool]
-
-# Fixed dataset path (detected from repository)
-DATA_PATH = Path("data/titanic_cleaned.csv").as_posix()
 
 SYSTEM_PROMPT = """你是一个资深 Python 数据分析 Agent。你只能通过一个工具 python_repl 来执行任意 Python 代码，从而完成所有数据分析、可视化与建模任务。
 严禁在脑中计算或伪造结果，所有统计、图表与模型训练/预测都必须通过 python_repl 工具的代码来完成与输出。
@@ -92,45 +89,47 @@ agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True, handle_pa
 
 
 def run_cli():
-    print("CSV Data Agent (LangChain + python_repl)")
-    print(f"- 固定数据路径: {DATA_PATH}")
-    print("- 输出目录: output/  (图表与模型将保存在此)")
-    print("- 示例对话：")
-    print("  1) 请对数据做 summary（均值、方差、最小、最大等）")
-    print("  2) 请对数值列的缺失值用均值填充，并输出到 data/titanic_cleaned_filled.csv")
-    print("  3) 请绘制 Survived 列的分布图，保存到 output/survived_distribution.png")
-    print("  4) 请用 sklearn 训练一个模型完成预测，并给出精度与若干预测结果示例")
-    print("输入 'exit' 退出。\n")
+    print("\n")
+    costum_data_path = input("请输入csv数据路径: ").strip()
+    if (costum_data_path[0] in ["\'", "\""]) and (costum_data_path[-1] in ["\'", "\""]):
+        costum_data_path = costum_data_path[1 : len(costum_data_path)]
+    print("\n")
+    print("CSV Data Agent\n")
+    print(f"数据路径: {costum_data_path}\n")
+    print("输入 'exit' 或者 'quit' 退出。\n")
 
     chat_history = []
 
-    # Ensure output directory exists (non-destructive helper)
+    # 确保图片和模型的输出路径存在
     Path("output").mkdir(parents=True, exist_ok=True)
 
+    # 持续对话
     while True:
         try:
-            user_input = input("你: ").strip()
-        except (EOFError, KeyboardInterrupt):
+            user_input = input("User: ").strip()
+        except (EOFError, KeyboardInterrupt):    # Ctrl + C 结束进程 或者 Ctrl + Z 回车结束
             print("\n再见。")
             break
 
-        if not user_input:
+        if not user_input:  # 没输入就继续
             continue
-        if user_input.lower() in {"exit", "quit"}:
+        if user_input.lower() in {"exit", "quit"}:  # exit quit 退出
             print("再见。")
             break
 
+
+        # 调用 agent
         result = agent_executor.invoke(
             {
                 "input": user_input,
                 "chat_history": chat_history,
-                "data_path": DATA_PATH,
+                "data_path": costum_data_path,
             }
         )
 
-        # Print assistant output
+        # 输出结果
         output_text = result.get("output", "")
-        print("\n助手:", output_text, "\n")
+        print("\nAgent:", output_text, "\n")
 
         # Maintain simple chat history for better multi-turn performance
         chat_history.append(HumanMessage(content=user_input))
